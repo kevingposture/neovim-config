@@ -19,7 +19,7 @@ require('lazy').setup({
         build = ':TSUpdate',
         config = function()
             require('nvim-treesitter.configs').setup({
-                ensure_installed = { 'javascript', 'php', 'python', 'cpp' }, -- Add more languages as needed
+                ensure_installed = { 'javascript', 'html', 'css', 'php', 'python', 'cpp' }, -- Add more languages as needed
                 highlight = {
                     enable = true,              -- Enable Treesitter-based syntax highlighting
                     additional_vim_regex_highlighting = false, -- Disable regex-based highlighting
@@ -55,7 +55,17 @@ require('lazy').setup({
         end,
     },
     {
-	'nvim-telescope/telescope.nvim'
+      'nvim-telescope/telescope.nvim'
+    },
+    {
+        'github/copilot.vim',
+        config = function()
+            vim.g.copilot_no_tab_map = true  -- Disable default tab mapping
+        end
+    },
+
+    { 
+      'mhartington/formatter.nvim',
     },
     
     -- Theme plugins
@@ -76,6 +86,89 @@ end
 
 -- Apply the desired theme
 apply_theme('catppuccin')  -- Current theme applied
+
+-- Formatter.nvim setup
+require('formatter').setup({
+    logging = true,
+    log_level = vim.log.levels.DEBUG,
+    filetype = {
+        javascript = {
+            function()
+                return {
+                    exe = "prettier",  -- Ensure this is the correct path if you're using pnpm
+                    args = { "--stdin-filepath", vim.api.nvim_buf_get_name(0) },
+                    stdin = true,
+                }
+            end
+        },
+        typescript = {
+            function()
+                return {
+                    exe = "prettier",
+                    args = { "--stdin-filepath", vim.api.nvim_buf_get_name(0) },
+                    stdin = true,
+                }
+            end
+        },
+        json = {
+            function()
+                return {
+                    exe = "prettier",
+                    args = { "--stdin-filepath", vim.api.nvim_buf_get_name(0) },
+                    stdin = true,
+                }
+            end
+        },
+        cpp = {
+          function()
+            return {
+              exe = "clang-format",
+              args = { "--assume-filename=" .. vim.api.nvim_buf_get_name(0) },
+              stdin = true,
+              cwd = vim.fn.expand("%:p:h")
+            }
+          end
+        },
+        python = {
+            function()
+                return {
+                    exe = "/opt/homebrew/bin/black",
+                    args = { "-" },  -- Black reads from stdin when using the "-" flag
+                    stdin = true
+                }
+            end
+        },
+
+        php = {
+           function()
+                -- Get the current file path
+                local filepath = vim.api.nvim_buf_get_name(0)
+                return {
+                    exe = "/Users/kevingarubba/.composer/vendor/bin/php-cs-fixer",
+                    args = {
+                        "fix",
+                        "--config=/Users/kevingarubba/.php-cs-fixer.php",  -- Ensure this path is correct
+                        "--using-cache=no",
+                        "--quiet",
+                        filepath,
+                    },
+                    stdin = false,
+                    cwd = vim.fn.expand('%:p:h'),  -- Run php-cs-fixer in the directory of the file
+                    temp_file = true,  -- Use a temporary file for formatting
+                }
+            end
+        },
+        -- Add more filetypes as needed
+    }
+})
+
+-- Format on save
+vim.api.nvim_exec([[
+  augroup FormatAutogroup
+    autocmd!
+    autocmd BufWritePost *.js,*.ts,*.json,*.cpp,*.py,*.php FormatWrite
+  augroup END
+]], true)
 
 -- Function to browse and load sessions
 local function load_session()
@@ -137,3 +230,5 @@ vim.api.nvim_set_keymap('n', '<leader>b', ':Neotree toggle<CR>', { noremap = tru
 vim.api.nvim_set_keymap('n', '<leader>ss', ':SaveSession<CR>', { noremap = true, silent = true })
 vim.api.nvim_set_keymap('n', '<leader>ls', ':LoadSession<CR>', { noremap = true, silent = true })
 
+-- Map <C-j> to accept Copilot suggestions
+vim.api.nvim_set_keymap('i', '<C-j>', 'copilot#Accept("<CR>")', { noremap = true, silent = true, expr = true })
