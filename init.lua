@@ -73,6 +73,12 @@ require('lazy').setup({
       'stevearc/conform.nvim'
     },
     
+    {
+      'numToStr/Comment.nvim',
+        config = function()
+            require('Comment').setup()
+        end
+    },
 
     -- Theme plugins
     { 'sainnhe/gruvbox-material' },
@@ -115,6 +121,17 @@ require('conform').setup({
       },
     },
 })
+
+-- Install and configure Comment.nvim
+require('Comment').setup({
+    -- Optional configuration, for example, you can toggle comments using gc or gcc
+    mappings = {
+        -- Basic mappings for normal and visual mode
+        basic = true,
+        extra = true,
+    }
+})
+
 
 -- conform.nvim custom command to format code
 vim.api.nvim_create_user_command("Format", function(args)
@@ -199,3 +216,7 @@ vim.api.nvim_set_keymap('n', '<leader>ls', ':LoadSession<CR>', { noremap = true,
 
 -- Map <C-j> to accept Copilot suggestions
 vim.api.nvim_set_keymap('i', '<C-j>', 'copilot#Accept("<CR>")', { noremap = true, silent = true, expr = true })
+
+-- Keybindings for Comment.nvim
+vim.api.nvim_set_keymap('n', '<leader>/', '<cmd>lua require("Comment.api").toggle.linewise.current()<CR>', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('v', '<leader>/', '<ESC><cmd>lua require("Comment.api").toggle.linewise(vim.fn.visualmode())<CR>', { noremap = true, silent = true })
