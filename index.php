@@ -1,6 +1,5 @@
 <?php
 
-function test()
-{
+function test() {
     echo 'test';
 }

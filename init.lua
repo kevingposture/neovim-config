@@ -11,6 +11,11 @@ vim.opt.expandtab = true
 vim.opt.smartindent = true
 vim.opt.autoindent = true
 
+-- Remap indenting in visual mode to stay in visual mode
+vim.api.nvim_set_keymap('v', '<', '<gv', { noremap = true, silent = true })
+vim.api.nvim_set_keymap('v', '>', '>gv', { noremap = true, silent = true })
+
+
 -- Initialize lazy.nvim and set up plugins
 require('lazy').setup({
     -- nvim-treesitter for advanced syntax highlighting
@@ -64,10 +69,11 @@ require('lazy').setup({
         end
     },
 
-    { 
-      'mhartington/formatter.nvim',
+    {
+      'stevearc/conform.nvim'
     },
     
+
     -- Theme plugins
     { 'sainnhe/gruvbox-material' },
     { 'navarasu/onedark.nvim' },  -- OneDark theme plugin
@@ -76,7 +82,7 @@ require('lazy').setup({
 })
 
 require("catppuccin").setup({
-	transparent_background = true
+  transparent_background = true
 })
 
 -- Set up function to manage theme application without re-initializing lazy.nvim
@@ -87,88 +93,49 @@ end
 -- Apply the desired theme
 apply_theme('catppuccin')  -- Current theme applied
 
--- Formatter.nvim setup
-require('formatter').setup({
-    logging = true,
-    log_level = vim.log.levels.DEBUG,
-    filetype = {
-        javascript = {
-            function()
-                return {
-                    exe = "prettier",  -- Ensure this is the correct path if you're using pnpm
-                    args = { "--stdin-filepath", vim.api.nvim_buf_get_name(0) },
-                    stdin = true,
-                }
-            end
-        },
-        typescript = {
-            function()
-                return {
-                    exe = "prettier",
-                    args = { "--stdin-filepath", vim.api.nvim_buf_get_name(0) },
-                    stdin = true,
-                }
-            end
-        },
-        json = {
-            function()
-                return {
-                    exe = "prettier",
-                    args = { "--stdin-filepath", vim.api.nvim_buf_get_name(0) },
-                    stdin = true,
-                }
-            end
-        },
-        cpp = {
-          function()
-            return {
-              exe = "clang-format",
-              args = { "--assume-filename=" .. vim.api.nvim_buf_get_name(0) },
-              stdin = true,
-              cwd = vim.fn.expand("%:p:h")
-            }
-          end
-        },
-        python = {
-            function()
-                return {
-                    exe = "/opt/homebrew/bin/black",
-                    args = { "-" },  -- Black reads from stdin when using the "-" flag
-                    stdin = true
-                }
-            end
-        },
 
-        php = {
-           function()
-                -- Get the current file path
-                local filepath = vim.api.nvim_buf_get_name(0)
-                return {
-                    exe = "/Users/kevingarubba/.composer/vendor/bin/php-cs-fixer",
-                    args = {
-                        "fix",
-                        "--config=/Users/kevingarubba/.php-cs-fixer.php",  -- Ensure this path is correct
-                        "--using-cache=no",
-                        "--quiet",
-                        filepath,
-                    },
-                    stdin = false,
-                    cwd = vim.fn.expand('%:p:h'),  -- Run php-cs-fixer in the directory of the file
-                    temp_file = true,  -- Use a temporary file for formatting
-                }
-            end
+require('conform').setup({
+    formatters_by_ft = {
+        javascript = { "prettier" },
+        typescript = { "prettier" },
+        json = { "prettier" },
+        php = { "php-cs-fixer" },
+        python = { "black" },
+        cpp = { "clang-format" },
+    },
+    formatters = {
+      ["php-cs-fixer"] = {
+        command = "/Users/kevingarubba/.composer/vendor/bin/php-cs-fixer",
+        args = {
+          "fix",
+          "--config=/Users/kevingarubba/.php-cs-fixer.php",
+          "$FILENAME",
         },
-        -- Add more filetypes as needed
-    }
+        stdin = false,
+      },
+    },
 })
 
--- Format on save
-vim.api.nvim_exec([[
-  augroup FormatAutogroup
-    autocmd!
-    autocmd BufWritePost *.js,*.ts,*.json,*.cpp,*.py,*.php FormatWrite
-  augroup END
-]], true)
+-- conform.nvim custom command to format code
+vim.api.nvim_create_user_command("Format", function(args)
+  local range = nil
+  if args.count ~= -1 then
+    local end_line = vim.api.nvim_buf_get_lines(0, args.line2 - 1, args.line2, true)[1]
+    range = {
+      start = { args.line1, 0 },
+      ["end"] = { args.line2, end_line:len() },
+    }
+  end
+  require("conform").format({ async = true, lsp_format = "fallback", range = range })
+end, { range = true })
+
+-- auto format on save
+vim.api.nvim_create_autocmd("BufWritePre", {
+    pattern = { "*.php", "*.js", "*.ts", "*.json", "*.py", "*.cpp" },
+    callback = function()
+        require('conform').format()
+    end,
+})
 
 -- Function to browse and load sessions
 local function load_session()
