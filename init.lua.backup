@@ -1,14 +1,10 @@
--- ========================================
--- Basic Neovim Settings
--- ========================================
-
 -- Source the existing Vimscript configuration
 vim.cmd("source ~/.config/nvim/base_init.vim")
 
--- Enable true color support
-vim.opt.termguicolors = true
+-- Initialize lazy.nvim
+vim.opt.rtp:prepend("~/.local/share/nvim/lazy/lazy.nvim")
 
--- Set tab width and indent size to 2 spaces
+-- set tab width and indent size to 2 spaces
 vim.opt.tabstop = 2
 vim.opt.shiftwidth = 2
 vim.opt.expandtab = true
@@ -19,41 +15,35 @@ vim.opt.autoindent = true
 vim.api.nvim_set_keymap("v", "<", "<gv", { noremap = true, silent = true })
 vim.api.nvim_set_keymap("v", ">", ">gv", { noremap = true, silent = true })
 
--- ========================================
--- Plugin Management with lazy.nvim
--- ========================================
-
--- Initialize lazy.nvim
-vim.opt.rtp:prepend("~/.local/share/nvim/lazy/lazy.nvim")
-
--- Set up plugins
+-- Initialize lazy.nvim and set up plugins
 require("lazy").setup({
-	-- Syntax Highlighting and Treesitter
+	-- nvim-treesitter for advanced syntax highlighting
 	{
 		"nvim-treesitter/nvim-treesitter",
 		build = ":TSUpdate",
 		config = function()
 			require("nvim-treesitter.configs").setup({
-				ensure_installed = { "javascript", "html", "css", "php", "python", "cpp" },
+				ensure_installed = { "javascript", "html", "css", "php", "python", "cpp" }, -- Add more languages as needed
 				highlight = {
-					enable = true,
-					additional_vim_regex_highlighting = false,
+					enable = true, -- Enable Treesitter-based syntax highlighting
+					additional_vim_regex_highlighting = false, -- Disable regex-based highlighting
 				},
 			})
 		end,
 	},
 
-	-- File Explorer: Neo-Tree
+	-- Neo-Tree and dependencies
 	{
 		"nvim-neo-tree/neo-tree.nvim",
 		branch = "v3.x",
 		dependencies = {
 			"nvim-lua/plenary.nvim",
-			"nvim-tree/nvim-web-devicons",
+			"nvim-tree/nvim-web-devicons", -- Icons
 			"MunifTanjim/nui.nvim",
 		},
 		config = function()
 			require("neo-tree").setup({
+				-- Add any Neo-Tree-specific configuration here
 				auto_clean_after_session_restore = true,
 				enable_git_status = true,
 				enable_diagnostics = true,
@@ -68,8 +58,6 @@ require("lazy").setup({
 			})
 		end,
 	},
-
-	-- Fuzzy Finder: Telescope
 	{
 		"nvim-telescope/telescope.nvim",
 		dependencies = { "nvim-lua/plenary.nvim" },
@@ -77,25 +65,21 @@ require("lazy").setup({
 			require("telescope").setup({
 				defaults = {
 					file_ignore_patterns = { "node_modules", ".git" },
-					vimgrep_arguments = {
-						"rg",
-						"--color=never",
-						"--no-heading",
-						"--with-filename",
-						"--line-number",
-						"--column",
-						"--smart-case",
-						"--hidden", -- Include hidden files
-					},
 				},
 			})
 		end,
 	},
+	{
+		"github/copilot.vim",
+		config = function()
+			vim.g.copilot_no_tab_map = true -- Disable default tab mapping
+		end,
+	},
 
-	-- Code Formatting: conform.nvim
-	{ "stevearc/conform.nvim" },
+	{
+		"stevearc/conform.nvim",
+	},
 
-	-- Commenting: Comment.nvim
 	{
 		"numToStr/Comment.nvim",
 		config = function()
@@ -103,51 +87,24 @@ require("lazy").setup({
 		end,
 	},
 
-	-- GitHub Copilot
-	{
-		"github/copilot.vim",
-		config = function()
-			vim.g.copilot_no_tab_map = true
-		end,
-	},
-
-	{
-		"mattn/emmet-vim",
-		config = function()
-			-- Set up Emmet options if needed
-			vim.g.user_emmet_leader_key = "<C-y>"
-			vim.g.user_emmet_settings = {
-				php = {
-					extends = "html",
-				},
-			}
-		end,
-	},
-
-	-- Themes
+	-- Theme plugins
 	{ "sainnhe/gruvbox-material" },
-	{ "navarasu/onedark.nvim" },
+	{ "navarasu/onedark.nvim" }, -- OneDark theme plugin
 	{ "folke/tokyonight.nvim" },
 	{ "catppuccin/nvim" },
 })
-
--- ========================================
--- Theme Configuration
--- ========================================
 
 require("catppuccin").setup({
 	transparent_background = true,
 })
 
+-- Set up function to manage theme application without re-initializing lazy.nvim
 local function apply_theme(theme_name)
 	vim.cmd("colorscheme " .. theme_name)
 end
 
-apply_theme("catppuccin") -- Apply the desired theme
-
--- ========================================
--- Code Formatting Configuration
--- ========================================
+-- Apply the desired theme
+apply_theme("catppuccin") -- Current theme applied
 
 require("conform").setup({
 	formatters_by_ft = {
@@ -158,9 +115,6 @@ require("conform").setup({
 		python = { "black" },
 		cpp = { "clang-format" },
 		lua = { "stylua" },
-		css = { "prettier" },
-		scss = { "prettier" },
-		html = { "prettier" },
 	},
 	formatters = {
 		["stylua"] = {
@@ -177,23 +131,20 @@ require("conform").setup({
 			},
 			stdin = false,
 		},
-		["prettier"] = {
-			command = "prettier",
-			args = function()
-				local ft = vim.bo.filetype
-				if ft == "scss" then
-					return { "--stdin-filepath", vim.fn.expand("%:p"), "--parser", "scss" }
-				elseif ft == "css" then
-					return { "--stdin-filepath", vim.fn.expand("%:p"), "--parser", "css" }
-				else
-					return { "--stdin-filepath", vim.fn.expand("%:p") }
-				end
-			end,
-			stdin = true,
-		},
 	},
 })
 
+-- Install and configure Comment.nvim
+require("Comment").setup({
+	-- Optional configuration, for example, you can toggle comments using gc or gcc
+	mappings = {
+		-- Basic mappings for normal and visual mode
+		basic = true,
+		extra = true,
+	},
+})
+
+-- conform.nvim custom command to format code
 vim.api.nvim_create_user_command("Format", function(args)
 	local range = nil
 	if args.count ~= -1 then
@@ -206,18 +157,15 @@ vim.api.nvim_create_user_command("Format", function(args)
 	require("conform").format({ async = true, lsp_format = "fallback", range = range })
 end, { range = true })
 
--- Auto format on save
+-- auto format on save
 vim.api.nvim_create_autocmd("BufWritePre", {
-	pattern = { "*.php", "*.js", "*.ts", "*.json", "*.py", "*.cpp", "*.lua", "*.css", "*.scss", "*.html" },
+	pattern = { "*.php", "*.js", "*.ts", "*.ts", "*.json", "*.py", "*.cpp", "*.lua" },
 	callback = function()
 		require("conform").format()
 	end,
 })
 
--- ========================================
--- Session Management
--- ========================================
-
+-- Function to browse and load sessions
 local function load_session()
 	require("telescope.builtin").find_files({
 		prompt_title = "Load Session",
@@ -228,87 +176,64 @@ local function load_session()
 				require("telescope.actions").close(prompt_bufnr)
 				vim.cmd("source " .. selection.cwd .. "/" .. selection.value)
 				print("Loaded session: " .. selection.value)
-				vim.cmd("Neotree toggle")
+				vim.cmd("Neotree toggle") -- Reopen Neo-Tree to ensure it displays correctly
 			end)
 			return true
 		end,
 	})
 end
 
+-- Create a custom command to load sessions
+vim.api.nvim_create_user_command("LoadSession", load_session, {})
+
+-- Function to save the current session
 local function save_session()
+	-- Get the current working directory
 	local cwd = vim.fn.getcwd()
+	-- Get the directory name as the default session name
 	local default_name = vim.fn.fnamemodify(cwd, ":t")
+	-- Prompt the user to enter a session name
 	local session_name = vim.fn.input("Session Name (default: " .. default_name .. "): ")
 
+	-- If the input is blank, use the default name (current directory name)
 	if session_name == "" then
 		session_name = default_name
 	end
 
+	-- Construct the full path for the session file
 	local session_file = "~/.config/nvim/sessions/" .. session_name .. ".vim"
+	-- Save the session
 	vim.cmd("mksession! " .. session_file)
 	print("Session saved as: " .. session_file)
 end
 
-vim.api.nvim_create_user_command("LoadSession", load_session, {})
+-- Create a custom command to save the session
 vim.api.nvim_create_user_command("SaveSession", save_session, {})
 
--- ========================================
--- Pane Management
--- ========================================
-local terminal_bufnr = nil
-local terminal_winid = nil
+-- Enable true color support
+vim.opt.termguicolors = true
 
--- Function to toggle terminal pane
-function toggle_terminal()
-	if terminal_winid and vim.api.nvim_win_is_valid(terminal_winid) then
-		-- Terminal window is open, close it
-		vim.api.nvim_win_hide(terminal_winid)
-		terminal_winid = nil
-	else
-		if terminal_bufnr and vim.api.nvim_buf_is_valid(terminal_bufnr) then
-			-- Reopen the existing terminal buffer in a new split
-			vim.cmd("botright split")
-			vim.api.nvim_win_set_buf(0, terminal_bufnr)
-			terminal_winid = vim.api.nvim_get_current_win()
-		else
-			-- Create a new terminal buffer
-			vim.cmd("botright split term://$SHELL")
-			terminal_bufnr = vim.api.nvim_get_current_buf()
-			terminal_winid = vim.api.nvim_get_current_win()
-			vim.cmd("resize 10") -- Adjust this height as needed
-		end
-		vim.cmd("startinsert") -- Start in insert mode for terminal input
-	end
-end
-
--- Set up a key mapping to search for a string in all files
-vim.api.nvim_set_keymap("n", "<leader>f", ":Telescope live_grep<CR>", { noremap = true, silent = true })
-
--- Map Ctrl+t to toggle the terminal pane
-vim.api.nvim_set_keymap("n", "<C-t>", ":lua toggle_terminal()<CR>", { noremap = true, silent = true })
-vim.api.nvim_set_keymap("t", "<C-t>", "<C-\\><C-n>:lua toggle_terminal()<CR>", { noremap = true, silent = true })
-
--- ========================================
--- Key Mappings
--- ========================================
+-- Example: Custom highlighting settings (optional)
+vim.api.nvim_set_hl(0, "TSKeyword", { fg = "#ff007c", bold = true })
+vim.api.nvim_set_hl(0, "TSFunction", { fg = "#00dfff", bold = true })
 
 -- Toggle Neo-Tree with <leader>b
 vim.api.nvim_set_keymap("n", "<leader>b", ":Neotree toggle<CR>", { noremap = true, silent = true })
 
--- SaveSession and LoadSession key mappings
+-- Keybindings for SaveSession and LoadSession
 vim.api.nvim_set_keymap("n", "<leader>ss", ":SaveSession<CR>", { noremap = true, silent = true })
 vim.api.nvim_set_keymap("n", "<leader>ls", ":LoadSession<CR>", { noremap = true, silent = true })
 
--- Telescope file finder
+-- Map <leader>p to trigger Telescope's find_files function
 vim.api.nvim_set_keymap("n", "<leader>p", ":Telescope find_files<CR>", { noremap = true, silent = true })
-vim.api.nvim_set_keymap("n", "<D-p>", ":Telescope find_files<CR>", { noremap = true, silent = true }) -- macOS
 
-vim.g.user_emmet_leader_key = "<C-e>" -- Change Emmet leader key to Ctrl-e, for example
+-- Optionally, map CMD+P for Mac users (if you're on macOS)
+vim.api.nvim_set_keymap("n", "<D-p>", ":Telescope find_files<CR>", { noremap = true, silent = true })
 
--- GitHub Copilot suggestion acceptance
+-- Map <C-j> to accept Copilot suggestions
 vim.api.nvim_set_keymap("i", "<C-j>", 'copilot#Accept("<CR>")', { noremap = true, silent = true, expr = true })
 
--- Comment.nvim key mappings
+-- Keybindings for Comment.nvim
 vim.api.nvim_set_keymap(
 	"n",
 	"<leader>/",

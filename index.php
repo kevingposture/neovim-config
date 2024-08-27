@@ -3,3 +3,6 @@
 function test() {
     echo 'test';
 }
+
+?>
+
