@@ -14,6 +14,7 @@ vim.opt.shiftwidth = 2
 vim.opt.expandtab = true
 vim.opt.smartindent = true
 vim.opt.autoindent = true
+vim.opt.wrap = false
 
 -- Remap indenting in visual mode to stay in visual mode
 vim.api.nvim_set_keymap("v", "<", "<gv", { noremap = true, silent = true })
@@ -55,6 +56,14 @@ require("lazy").setup({
 		config = function()
 			require("neo-tree").setup({
 				auto_clean_after_session_restore = true,
+				filesystem = {
+					filtered_items = {
+						visible = true, -- Show hidden files by default
+						hide_dotfiles = false, -- Do not hide files that start with a dot
+						hide_gitignored = false, -- Show files ignored by Git
+						hide_hidden = false, -- Do not hide hidden files
+					},
+				},
 				enable_git_status = true,
 				enable_diagnostics = true,
 				default_component_configs = {
@@ -124,6 +133,10 @@ require("lazy").setup({
 		end,
 	},
 
+	{
+		"letieu/hacker.nvim",
+	},
+
 	-- Themes
 	{ "sainnhe/gruvbox-material" },
 	{ "navarasu/onedark.nvim" },
@@ -173,6 +186,7 @@ require("conform").setup({
 			args = {
 				"fix",
 				"--config=/Users/kevingarubba/.php-cs-fixer.php",
+				"--using-cache=no",
 				"$FILENAME",
 			},
 			stdin = false,
@@ -255,6 +269,7 @@ vim.api.nvim_create_user_command("SaveSession", save_session, {})
 -- ========================================
 -- Pane Management
 -- ========================================
+-- Global variables to track the terminal buffer and window
 local terminal_bufnr = nil
 local terminal_winid = nil
 
@@ -280,6 +295,18 @@ function toggle_terminal()
 		vim.cmd("startinsert") -- Start in insert mode for terminal input
 	end
 end
+
+-- Autocommand to ensure terminal is always in Terminal mode
+vim.api.nvim_create_autocmd({ "BufEnter", "WinEnter", "TermOpen" }, {
+	pattern = "*",
+	callback = function()
+		if terminal_bufnr and vim.api.nvim_buf_is_valid(terminal_bufnr) then
+			if vim.api.nvim_get_current_buf() == terminal_bufnr then
+				vim.cmd("startinsert")
+			end
+		end
+	end,
+})
 
 -- Set up a key mapping to search for a string in all files
 vim.api.nvim_set_keymap("n", "<leader>f", ":Telescope live_grep<CR>", { noremap = true, silent = true })
