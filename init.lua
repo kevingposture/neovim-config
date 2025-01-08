@@ -133,6 +133,8 @@ require("lazy").setup({
 		end,
 	},
 
+	{ "tiagovla/scope.nvim" },
+
 	{
 		"letieu/hacker.nvim",
 	},
@@ -167,7 +169,7 @@ require("conform").setup({
 		javascript = { "prettier" },
 		typescript = { "prettier" },
 		json = { "prettier" },
-		php = { "php-cs-fixer" },
+		php = { "blade-formatter" },
 		python = { "black" },
 		cpp = { "clang-format" },
 		lua = { "stylua" },
@@ -181,16 +183,22 @@ require("conform").setup({
 			args = { "--config-path", vim.fn.expand("~/.config/stylua.toml"), "-" },
 			stdin = true,
 		},
-		["php-cs-fixer"] = {
-			command = "/Users/kevingarubba/.composer/vendor/bin/php-cs-fixer",
-			args = {
-				"fix",
-				"--config=/Users/kevingarubba/.php-cs-fixer.php",
-				"--using-cache=no",
-				"$FILENAME",
-			},
+		["blade-formatter"] = {
+			command = "blade-formatter",
+			args = { "--write", "$FILENAME" },
 			stdin = false,
 		},
+		-- ["php-cs-fixer"] = {
+		-- 	command = "/Users/kevingarubba/.composer/vendor/bin/php-cs-fixer",
+		-- 	args = {
+		-- 		"fix",
+		-- 		"--config=/Users/kevingarubba/.php-cs-fixer.php",
+		-- 		"--using-cache=no",
+		-- 		"$FILENAME",
+		-- 	},
+		-- 	stdin = false,
+		-- },
+		--[
 		["prettier"] = {
 			command = "prettier",
 			args = function()
@@ -318,6 +326,9 @@ vim.api.nvim_set_keymap("t", "<C-t>", "<C-\\><C-n>:lua toggle_terminal()<CR>", {
 -- ========================================
 -- Key Mappings
 -- ========================================
+
+-- Create new tab
+vim.api.nvim_set_keymap("n", "<leader>tn", ":tabnew<CR>", { noremap = true, silent = true })
 
 -- Toggle Neo-Tree with <leader>b
 vim.api.nvim_set_keymap("n", "<leader>b", ":Neotree toggle<CR>", { noremap = true, silent = true })
