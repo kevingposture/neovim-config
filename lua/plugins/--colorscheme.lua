@@ -1,0 +1,17 @@
+-- return {
+-- 	-- add catpuccin
+-- 	{ 
+-- 		"catppuccin/nvim", 
+-- 		name = "catppuccin", 
+-- 		priority = 1000,
+-- 		opts = { transparent_background = true }
+-- 	},
+
+-- 	-- Configure LazyVim to load catpuccin
+-- 	{
+-- 		"LazyVim/LazyVim",
+-- 		opts = {
+-- 			colorscheme = "catppuccin",
+-- 		},
+-- 	}
+-- }

@@ -25,7 +25,9 @@ vim.api.nvim_set_keymap("v", ">", ">gv", { noremap = true, silent = true })
 -- ========================================
 
 -- Initialize lazy.nvim
-vim.opt.rtp:prepend("~/.local/share/nvim/lazy/lazy.nvim")
+require('config.lazy')
+-- vim.opt.rtp:prepend("~/.local/share/nvim/lazy/lazy.nvim")
+-- vim.cmd("~/.config/nvim/lazy/lazy.lua")
 
 -- Set up plugins
 require("lazy").setup({
@@ -143,7 +145,7 @@ require("lazy").setup({
 	{ "sainnhe/gruvbox-material" },
 	{ "navarasu/onedark.nvim" },
 	{ "folke/tokyonight.nvim" },
-	{ "catppuccin/nvim" },
+	{ "catppuccin/nvim" }
 })
 
 -- ========================================
@@ -322,6 +324,8 @@ vim.api.nvim_set_keymap("n", "<leader>f", ":Telescope live_grep<CR>", { noremap 
 -- Map Ctrl+t to toggle the terminal pane
 vim.api.nvim_set_keymap("n", "<C-t>", ":lua toggle_terminal()<CR>", { noremap = true, silent = true })
 vim.api.nvim_set_keymap("t", "<C-t>", "<C-\\><C-n>:lua toggle_terminal()<CR>", { noremap = true, silent = true })
+
+-- dragons
 
 -- ========================================
 -- Key Mappings
